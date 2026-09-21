@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { deleteCustomerAction, updateCustomerAction } from "@/app/(app)/customers/actions";
+import { updateCustomerAction } from "@/app/(app)/customers/actions";
+import { DeleteCustomerForm } from "@/components/delete-customer-form";
 import { getCompanyContext } from "@/lib/auth";
 import { getCustomer } from "@/lib/data";
 
@@ -26,7 +27,7 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
       </section>
       <section className="danger-zone">
         <div><h2>Excluir cliente</h2><p>Clientes sem pedidos podem ser apagados definitivamente. Clientes com pedidos ficam protegidos para não alterar o histórico de vendas.</p></div>
-        <form action={deleteCustomerAction}><input type="hidden" name="customer_id" value={customer.id} /><button className="button button-danger" type="submit">Excluir cliente</button></form>
+        <DeleteCustomerForm customerId={customer.id} customerName={customer.name} />
       </section>
     </section>
   );

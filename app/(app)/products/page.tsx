@@ -3,6 +3,7 @@ import { createProductAction, toggleProductAction } from "@/app/(app)/products/a
 import { getCompanyContext } from "@/lib/auth";
 import { getProducts, getVariants } from "@/lib/data";
 import { formatCurrency } from "@/lib/formatters";
+import { productImageUrl } from "@/lib/product-images";
 
 type Props = { searchParams: Promise<{ error?: string }> };
 
@@ -35,7 +36,12 @@ export default async function ProductsPage({ searchParams }: Props) {
           {products.length === 0 ? <p className="empty panel">Ainda não há produtos. Cadastre o primeiro ao lado.</p> : products.map((product) => {
             const productVariants = variantsByProduct.get(product.id) ?? [];
             return <article className="product-card" key={product.id}>
-              <div><div className="split-heading"><h3>{product.name}</h3>{!product.is_active && <span className="status status-cancelled">Inativo</span>}</div><p>{product.description || "Sem descrição"}</p></div>
+              <div className="product-card-header">
+                <div className="product-image-thumbnail">
+                  {productImageUrl(product.image_path) ? <img src={productImageUrl(product.image_path)!} alt={`Foto de ${product.name}`} /> : <span aria-hidden="true">◈</span>}
+                </div>
+                <div><div className="split-heading"><h3>{product.name}</h3>{!product.is_active && <span className="status status-cancelled">Inativo</span>}</div><p>{product.description || "Sem descrição"}</p></div>
+              </div>
               <ul>{productVariants.map((variant) => <li key={variant.id}><span>{variant.name}{variant.units_per_package ? ` · ${variant.units_per_package} un.` : ""}{!variant.is_active ? " · inativa" : ""}</span><b>{formatCurrency(variant.price_cents)}</b></li>)}</ul>
               <div className="card-actions"><Link href={`/products/${product.id}`} className="button button-secondary">Editar</Link><form action={toggleProductAction}><input type="hidden" name="product_id" value={product.id} /><input type="hidden" name="next_state" value={String(!product.is_active)} /><button className="text-button" type="submit">{product.is_active ? "Desativar" : "Ativar"}</button></form></div>
             </article>;

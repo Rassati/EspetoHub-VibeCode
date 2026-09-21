@@ -157,8 +157,11 @@ export async function getDashboardData(companyId: string, date = saoPauloDate())
 
 export async function getSaleCatalog(companyId: string): Promise<SaleVariant[]> {
   const [products, variants] = await Promise.all([getProducts(companyId), getVariants(companyId)]);
-  const productNames = new Map(products.map((product) => [product.id, product.name]));
+  const productsById = new Map(products.map((product) => [product.id, product]));
   return variants
-    .filter((variant) => productNames.has(variant.product_id))
-    .map((variant) => ({ ...variant, productName: productNames.get(variant.product_id)! }));
+    .filter((variant) => productsById.has(variant.product_id))
+    .map((variant) => {
+      const product = productsById.get(variant.product_id)!;
+      return { ...variant, productName: product.name, productImagePath: product.image_path };
+    });
 }

@@ -40,6 +40,7 @@ export type Order = {
   discount_cents: number;
   total_cents: number;
   notes: string | null;
+  delivered_at: string | null;
   created_at: string;
 };
 
@@ -54,4 +55,7 @@ export type OrderItem = {
   line_total_cents: number;
 };
 
-export type SaleVariant = ProductVariant & { productName: string };
+export type SaleVariant = ProductVariant & {
+  productName: string;
+  productImagePath: string | null;
+};

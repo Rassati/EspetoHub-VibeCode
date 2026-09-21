@@ -7,6 +7,9 @@ export function formatCurrency(cents: number | null | undefined) {
 
 export function formatDate(date: string) {
   return new Intl.DateTimeFormat("pt-BR", {
+    // PostgreSQL stores timestamptz in UTC. Rendering explicitly in Brasília
+    // time prevents the server's timezone from shifting the displayed hour.
+    timeZone: "America/Sao_Paulo",
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(date));

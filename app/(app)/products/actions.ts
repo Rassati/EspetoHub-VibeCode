@@ -24,6 +24,83 @@ function price(formData: FormData) {
   return cents;
 }
 
+function isValidProductImagePath(imagePath: string, companyId: string, productId: string) {
+  const prefix = `${companyId}/${productId}/`;
+  const fileName = imagePath.slice(prefix.length);
+  return imagePath.startsWith(prefix) && /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,120}$/.test(fileName);
+}
+
+type ProductImageResult = { error?: string };
+
+/**
+ * The file itself is uploaded directly from the browser to Supabase Storage.
+ * This action only associates a photo in the current company's folder with the
+ * current product. Keeping that check on the server prevents a forged browser
+ * request from pointing a product at somebody else's Storage object.
+ */
+export async function saveProductImageAction(productId: string, imagePath: string): Promise<ProductImageResult> {
+  const context = await getCompanyContext();
+  if (!isValidProductImagePath(imagePath, context.company.id, productId)) {
+    return { error: "Não foi possível validar a foto enviada." };
+  }
+
+  const supabase = await createClient();
+  const { data: product, error: productError } = await supabase
+    .from("products")
+    .select("image_path")
+    .eq("id", productId)
+    .eq("company_id", context.company.id)
+    .maybeSingle();
+
+  if (productError || !product) return { error: "Produto não encontrado." };
+
+  const { error } = await supabase
+    .from("products")
+    .update({ image_path: imagePath })
+    .eq("id", productId)
+    .eq("company_id", context.company.id);
+  if (error) return { error: error.message };
+
+  // Keeping the new photo if this cleanup fails is preferable to losing a
+  // successfully saved product image. A failed cleanup merely leaves an
+  // unreachable file in the company's private folder.
+  if (product.image_path && product.image_path !== imagePath) {
+    await supabase.storage.from("product-images").remove([product.image_path]);
+  }
+
+  revalidatePath("/products");
+  revalidatePath(`/products/${productId}`);
+  revalidatePath("/orders/new");
+  return {};
+}
+
+export async function removeProductImageAction(productId: string): Promise<ProductImageResult> {
+  const context = await getCompanyContext();
+  const supabase = await createClient();
+  const { data: product, error: productError } = await supabase
+    .from("products")
+    .select("image_path")
+    .eq("id", productId)
+    .eq("company_id", context.company.id)
+    .maybeSingle();
+
+  if (productError || !product) return { error: "Produto não encontrado." };
+  if (!product.image_path) return {};
+
+  const { error } = await supabase
+    .from("products")
+    .update({ image_path: null })
+    .eq("id", productId)
+    .eq("company_id", context.company.id);
+  if (error) return { error: error.message };
+
+  await supabase.storage.from("product-images").remove([product.image_path]);
+  revalidatePath("/products");
+  revalidatePath(`/products/${productId}`);
+  revalidatePath("/orders/new");
+  return {};
+}
+
 export async function createProductAction(formData: FormData) {
   const name = text(formData, "name");
   const variantName = text(formData, "variant_name");

@@ -88,6 +88,22 @@ Nada disso bloqueia o protótipo:
 
 5. Abra `http://localhost:3000`, crie a primeira conta/empresa, cadastre produtos e clientes e faça um pedido.
 
+### Migrações posteriores
+
+Se a primeira execução do banco parou no erro de `inventory_items`, execute os arquivos no SQL Editor do Supabase nesta ordem:
+
+1. `0002_resume_after_inventory_fk_error.sql` — conclui a estrutura que ficou incompleta.
+2. `0003_delivery_date_and_dashboard.sql` — registra a data de entrega e permite o painel financeiro por dia.
+3. `0004_customer_management_and_product_images.sql` — habilita edição/exclusão de clientes e fotos dos produtos. Este último pode ser executado novamente sem problema.
+
+## Atendimento mais rápido
+
+- A tela **Novo pedido** tem busca por nome de produto ou variação, filtro “No pedido” e cartões compactos; ela continua prática mesmo com 40 ou mais produtos.
+- Cada produto pode ter uma **foto de capa** em JPG, PNG ou WebP de até 5 MB. A foto pode ser trocada ou removida e fica isolada na pasta da empresa no Supabase Storage.
+- Em **Clientes**, toque em um cartão para editar os dados. A exclusão pede confirmação e só é permitida quando o cliente ainda não tem pedidos, protegendo o histórico de vendas.
+- Em um pedido salvo, use **Imprimir comanda**. A aplicação abre uma página limpa, chama a impressão do navegador e inclui cliente, itens, observações, total e status. Funciona também no celular, usando a opção de imprimir/compartilhar do aparelho.
+- Todas as datas e horas são apresentadas no fuso de Brasília (`America/Sao_Paulo`).
+
 ## Estrutura de pastas
 
 ```text

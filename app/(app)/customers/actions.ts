@@ -6,6 +6,7 @@ import { getCompanyContext } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 const field = (formData: FormData, name: string) => String(formData.get(name) ?? "").trim();
+const isUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 
 export async function createCustomerAction(formData: FormData) {
   const name = field(formData, "name");
@@ -28,10 +29,11 @@ export async function createCustomerAction(formData: FormData) {
 export async function updateCustomerAction(formData: FormData) {
   const customerId = field(formData, "customer_id");
   const name = field(formData, "name");
-  if (!customerId || !name) redirect(`/customers/${customerId}?error=Informe+o+nome+do+cliente.`);
+  if (!isUuid(customerId)) redirect("/customers?error=Cliente+inv%C3%A1lido.");
+  if (!name) redirect(`/customers/${customerId}?error=Informe+o+nome+do+cliente.`);
   const context = await getCompanyContext();
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("customers")
     .update({
       name,
@@ -40,8 +42,10 @@ export async function updateCustomerAction(formData: FormData) {
       notes: field(formData, "notes") || null,
     })
     .eq("id", customerId)
-    .eq("company_id", context.company.id);
-  if (error) redirect(`/customers/${customerId}?error=${encodeURIComponent(error.message)}`);
+    .eq("company_id", context.company.id)
+    .select("id")
+    .maybeSingle();
+  if (error || !data) redirect(`/customers/${customerId}?error=${encodeURIComponent(error?.message ?? "Cliente não encontrado ou sem acesso.")}`);
   revalidatePath("/customers");
   revalidatePath("/orders/new");
   redirect(`/customers/${customerId}?saved=1`);
@@ -49,6 +53,7 @@ export async function updateCustomerAction(formData: FormData) {
 
 export async function deleteCustomerAction(formData: FormData) {
   const customerId = field(formData, "customer_id");
+  if (!isUuid(customerId)) redirect("/customers?error=Cliente+inv%C3%A1lido.");
   const context = await getCompanyContext();
   const supabase = await createClient();
   const { count, error: countError } = await supabase
@@ -60,8 +65,14 @@ export async function deleteCustomerAction(formData: FormData) {
   if ((count ?? 0) > 0) {
     redirect(`/customers/${customerId}?error=Este+cliente+tem+pedidos+no+hist%C3%B3rico+e+n%C3%A3o+pode+ser+exclu%C3%ADdo.`);
   }
-  const { error } = await supabase.from("customers").delete().eq("id", customerId).eq("company_id", context.company.id);
-  if (error) redirect(`/customers/${customerId}?error=${encodeURIComponent(error.message)}`);
+  const { data, error } = await supabase
+    .from("customers")
+    .delete()
+    .eq("id", customerId)
+    .eq("company_id", context.company.id)
+    .select("id")
+    .maybeSingle();
+  if (error || !data) redirect(`/customers/${customerId}?error=${encodeURIComponent(error?.message ?? "Cliente não encontrado ou sem acesso.")}`);
   revalidatePath("/customers");
   revalidatePath("/orders/new");
   redirect("/customers?deleted=1");
