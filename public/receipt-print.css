@@ -1,0 +1,44 @@
+/* Loaded only on the receipt. JS temporarily enables it to measure before print. */
+@page { size: A4 portrait; margin: 10mm; }
+html, body { min-height: 0; height: auto; margin: 0; padding: 0; background: white; }
+body { color: #000; }
+.print-toolbar { display: none !important; }
+.receipt-page { min-height: 0; margin: 0; padding: 0; background: white; }
+/* A4 minus margins, with 1 mm spare vertically to avoid a rounding-only page. */
+.receipt-sheet {
+  position: relative;
+  width: 190mm;
+  margin: 0;
+  padding: 0;
+}
+.receipt-sheet:is([data-print-fitted], [data-print-fitting]) {
+  height: 276mm;
+  overflow: hidden;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.receipt-card {
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 190mm;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  transform: scale(var(--receipt-print-scale, 1));
+  transform-origin: top left;
+  overflow-wrap: anywhere;
+}
+.receipt-sheet:is([data-print-fitted], [data-print-fitting]) > .receipt-card { position: absolute; }
+.receipt-header, .receipt-items-section, .receipt-note, .receipt-footer { border-color: #000; }
+.receipt-header { padding-bottom: 10px; }
+.receipt-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 20px; margin: 12px 0; }
+.receipt-items-section, .receipt-note { padding: 10px 0; }
+.receipt-items { gap: 6px; }
+.receipt-items li { break-inside: auto; }
+.receipt-items span { margin-top: 2px; }
+.receipt-items-section h2, .receipt-note h2 { margin-bottom: 8px; }
+.receipt-totals { gap: 6px; padding: 12px 0; }
+.receipt-footer { padding-top: 10px; }

@@ -12,8 +12,10 @@ export default async function PrintOrderPage({ params }: Props) {
     const [{ id }, { company }] = await Promise.all([params, getCompanyContext()]);
     const { order, items } = await getReceiptOrder(company.id, id);
     return (<main className="receipt-page">
+      <link rel="stylesheet" href="/receipt-print.css" media="print" data-receipt-print=""/>
       <ReceiptPrintControls orderId={order.id} orderNumber={order.order_number}/>
 
+      <div className="receipt-sheet">
       <article className="receipt-card">
         <header className="receipt-header">
           <p className="receipt-company">{company.name}</p>
@@ -73,5 +75,6 @@ export default async function PrintOrderPage({ params }: Props) {
           <small>Guarde esta comanda para acompanhar o pedido.</small>
         </footer>
       </article>
+      </div>
     </main>);
 }

@@ -133,6 +133,24 @@ sem compartilhar sessões ou dados entre visitantes.
 - Em um pedido salvo, use **Imprimir comanda**. A aplicação abre uma página limpa, chama a impressão do navegador e inclui nome e telefone do cliente, itens, observações, total e status. O endereço cadastrado não é consultado nem exibido na comanda. Endereços digitados manualmente nas observações continuam sendo texto livre do pedido. Funciona também no celular, usando a opção de imprimir/compartilhar do aparelho.
 - Todas as datas e horas são apresentadas no fuso de Brasília (`America/Sao_Paulo`).
 
+### Comanda em uma folha
+
+A impressão usa A4 em retrato, margens de 10 mm e ajuste automático de escala
+para acomodar a comanda inteira em uma única folha, sem remover itens.
+O ajuste ocorre após carregar os estilos/fontes e novamente antes de imprimir
+(inclusive pelo Ctrl+P). Pedidos muito grandes ficam com letras menores.
+No diálogo da impressora, mantenha A4, escala 100% e cabeçalhos/rodapés do navegador
+desativados. Alterações manuais de papel, escala ou margens podem mudar o resultado;
+o site não controla essas opções do driver. Aguarde o botão “Imprimir comanda”
+ficar disponível. Se o JavaScript/estilo não carregar, o fallback preserva o
+conteúdo completo, mesmo que precise de mais páginas, em vez de cortar os itens.
+
+Os testes de escala estão em `tests/receipt-print.test.mjs`. Para conferir o layout
+com dados fictícios, execute `node tests/preview-receipt.mjs` e abra
+`http://127.0.0.1:3002/?items=2` ou `http://127.0.0.1:3002/?items=200`.
+Essa prévia usa os estilos de impressão na tela; não substitui a prova na impressora.
+O ajuste combina o [CSS de impressão e o evento beforeprint](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Media_queries/Printing).
+
 ## Estrutura de pastas
 
 ```text

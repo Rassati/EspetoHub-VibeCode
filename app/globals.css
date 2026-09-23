@@ -328,7 +328,7 @@ legend { padding: 0 5px; color: var(--muted); font-size: .78rem; font-weight: 70
 .receipt-footer p { margin: 0 0 4px; font-size: .9rem; font-weight: 800; }
 .receipt-footer small { font-size: .72rem; }
 
-@media (max-width: 700px) {
+@media screen and (max-width: 700px) {
   .order-heading-actions { justify-content: flex-start; }
   .receipt-page { padding: 18px 12px 30px; }
   .print-toolbar { align-items: flex-start; flex-direction: column; gap: 12px; }
@@ -336,17 +336,6 @@ legend { padding: 0 5px; color: var(--muted); font-size: .78rem; font-weight: 70
   .print-toolbar-actions .button { flex: 1 1 145px; }
   .receipt-card { padding: 23px 18px; }
   .receipt-meta { grid-template-columns: 1fr; gap: 11px; }
-}
-
-@media print {
-  @page { margin: 10mm; }
-  html, body { min-height: auto; background: white; }
-  body { padding: 0; color: #000; }
-  .print-toolbar { display: none !important; }
-  .receipt-page { min-height: 0; padding: 0; background: white; }
-  .receipt-card { width: 100%; max-width: none; margin: 0; padding: 0; border: 0; box-shadow: none; }
-  .receipt-header, .receipt-items-section, .receipt-note, .receipt-footer { border-color: #000; }
-  .receipt-items li { break-inside: avoid; }
 }
 
 @media (prefers-reduced-motion: reduce) {
