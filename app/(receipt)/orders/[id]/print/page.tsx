@@ -1,18 +1,18 @@
 import { ReceiptPrintControls } from "@/components/receipt-print-controls";
 import { getCompanyContext } from "@/lib/auth";
 import { orderStatus } from "@/lib/constants";
-import { getOrder } from "@/lib/data";
+import { getReceiptOrder } from "@/lib/data";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-
-type Props = { params: Promise<{ id: string }> };
-
+type Props = {
+    params: Promise<{
+        id: string;
+    }>;
+};
 export default async function PrintOrderPage({ params }: Props) {
-  const [{ id }, { company }] = await Promise.all([params, getCompanyContext()]);
-  const { order, items } = await getOrder(company.id, id);
-
-  return (
-    <main className="receipt-page">
-      <ReceiptPrintControls orderId={order.id} orderNumber={order.order_number} />
+    const [{ id }, { company }] = await Promise.all([params, getCompanyContext()]);
+    const { order, items } = await getReceiptOrder(company.id, id);
+    return (<main className="receipt-page">
+      <ReceiptPrintControls orderId={order.id} orderNumber={order.order_number}/>
 
       <article className="receipt-card">
         <header className="receipt-header">
@@ -26,35 +26,24 @@ export default async function PrintOrderPage({ params }: Props) {
             <dt>Cliente</dt>
             <dd>{order.customers?.name ?? "Cliente não informado"}</dd>
           </div>
-          {order.customers?.phone && (
-            <div>
+          {order.customers?.phone && (<div>
               <dt>Telefone</dt>
               <dd>{order.customers.phone}</dd>
-            </div>
-          )}
-          {order.customers?.address && (
-            <div>
-              <dt>Endereço</dt>
-              <dd>{order.customers.address}</dd>
-            </div>
-          )}
+            </div>)}
           <div>
             <dt>Status</dt>
             <dd>{orderStatus[order.status]}</dd>
           </div>
-          {order.delivered_at && (
-            <div>
+          {order.delivered_at && (<div>
               <dt>Entregue em</dt>
               <dd>{formatDate(order.delivered_at)}</dd>
-            </div>
-          )}
+            </div>)}
         </dl>
 
         <section className="receipt-items-section">
           <h2>Itens do pedido</h2>
           <ul className="receipt-items">
-            {items.map((item) => (
-              <li key={item.id}>
+            {items.map((item) => (<li key={item.id}>
                 <div>
                   <strong>{item.quantity} × {item.product_name}</strong>
                   <span>
@@ -64,17 +53,14 @@ export default async function PrintOrderPage({ params }: Props) {
                   </span>
                 </div>
                 <b>{formatCurrency(item.line_total_cents)}</b>
-              </li>
-            ))}
+              </li>))}
           </ul>
         </section>
 
-        {order.notes && (
-          <section className="receipt-note">
+        {order.notes && (<section className="receipt-note">
             <h2>Observações</h2>
             <p>{order.notes}</p>
-          </section>
-        )}
+          </section>)}
 
         <section className="receipt-totals" aria-label="Totais do pedido">
           <span>Subtotal <b>{formatCurrency(order.subtotal_cents)}</b></span>
@@ -87,6 +73,5 @@ export default async function PrintOrderPage({ params }: Props) {
           <small>Guarde esta comanda para acompanhar o pedido.</small>
         </footer>
       </article>
-    </main>
-  );
+    </main>);
 }

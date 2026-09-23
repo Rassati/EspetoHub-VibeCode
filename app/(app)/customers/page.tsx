@@ -1,18 +1,19 @@
+import { SubmitButton } from "@/components/submit-button";
 import Link from "next/link";
 import { createCustomerAction } from "@/app/(app)/customers/actions";
 import { getCompanyContext } from "@/lib/auth";
 import { getCustomers } from "@/lib/data";
-
 type Props = {
-  searchParams: Promise<{ error?: string; saved?: string; deleted?: string }>;
+    searchParams: Promise<{
+        error?: string;
+        saved?: string;
+        deleted?: string;
+    }>;
 };
-
 export default async function CustomersPage({ searchParams }: Props) {
-  const [{ company }, params] = await Promise.all([getCompanyContext(), searchParams]);
-  const customers = await getCustomers(company.id);
-
-  return (
-    <section className="page">
+    const [{ company }, params] = await Promise.all([getCompanyContext(), searchParams]);
+    const customers = await getCustomers(company.id);
+    return (<section className="page">
       <div className="page-heading">
         <p className="eyebrow">Agenda</p>
         <h1>Clientes</h1>
@@ -29,21 +30,21 @@ export default async function CustomersPage({ searchParams }: Props) {
           <form action={createCustomerAction} className="stack-form compact-form">
             <label>
               Nome
-              <input required name="name" placeholder="Ex.: João da Silva" />
+              <input required name="name" maxLength={140} placeholder="Ex.: João da Silva"/>
             </label>
             <label>
               Telefone <small>opcional</small>
-              <input name="phone" inputMode="tel" placeholder="(11) 99999-9999" />
+              <input name="phone" maxLength={40} inputMode="tel" placeholder="(11) 99999-9999"/>
             </label>
             <label>
               Endereço <small>opcional</small>
-              <textarea name="address" rows={2} placeholder="Rua, número e bairro" />
+              <textarea name="address" maxLength={500} rows={2} placeholder="Rua, número e bairro"/>
             </label>
             <label>
               Observações <small>opcional</small>
-              <textarea name="notes" rows={2} placeholder="Ex.: entregar depois das 18h" />
+              <textarea name="notes" maxLength={2000} rows={2} placeholder="Ex.: entregar depois das 18h"/>
             </label>
-            <button className="button button-primary">Salvar cliente</button>
+            <SubmitButton>Salvar cliente</SubmitButton>
           </form>
         </section>
 
@@ -53,10 +54,8 @@ export default async function CustomersPage({ searchParams }: Props) {
             <span className="count-pill">{customers.length}</span>
           </div>
 
-          {customers.length ? (
-            <div className="customer-list">
-              {customers.map((customer) => (
-                <Link className="customer-card" href={`/customers/${customer.id}`} key={customer.id}>
+          {customers.length ? (<div className="customer-list">
+              {customers.map((customer) => (<Link className="customer-card" href={`/customers/${customer.id}`} prefetch={false} key={customer.id}>
                   <div className="avatar">{customer.name.slice(0, 1).toUpperCase()}</div>
                   <div>
                     <h3>{customer.name}</h3>
@@ -64,14 +63,9 @@ export default async function CustomersPage({ searchParams }: Props) {
                     {customer.address && <small>{customer.address}</small>}
                   </div>
                   <b className="edit-customer">Editar →</b>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <p className="empty panel">Cadastre um cliente para começar a registrar pedidos.</p>
-          )}
+                </Link>))}
+            </div>) : (<p className="empty panel">Cadastre um cliente para começar a registrar pedidos.</p>)}
         </section>
       </div>
-    </section>
-  );
+    </section>);
 }

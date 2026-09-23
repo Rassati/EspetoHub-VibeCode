@@ -1,3 +1,4 @@
+import { SubmitButton } from "@/components/submit-button";
 import Link from "next/link";
 import { updateOrderStatusAction } from "@/app/(app)/orders/actions";
 import { StatusBadge } from "@/components/status-badge";
@@ -5,15 +6,22 @@ import { orderStatus, type OrderStatus } from "@/lib/constants";
 import { getCompanyContext } from "@/lib/auth";
 import { getOrder } from "@/lib/data";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-
-type Props = { params: Promise<{ id: string }> };
-
-export default async function OrderDetailPage({ params }: Props) {
-  const [{ id }, { company }] = await Promise.all([params, getCompanyContext()]);
-  const { order, items } = await getOrder(company.id, id);
-  return (
-    <section className="page">
+type Props = {
+    params: Promise<{
+        id: string;
+    }>;
+    searchParams: Promise<{
+        error?: string;
+        saved?: string;
+    }>;
+};
+export default async function OrderDetailPage({ params, searchParams }: Props) {
+    const [{ id }, { company }, options] = await Promise.all([params, getCompanyContext(), searchParams]);
+    const { order, items } = await getOrder(company.id, id);
+    return (<section className="page">
       <Link className="back-link" href="/orders">← Pedidos</Link>
+      {options.error && <p className="form-error" role="alert">{options.error}</p>}
+      {options.saved && <p className="form-success" role="status">Status atualizado.</p>}
       <div className="page-heading split-heading">
         <div>
           <p className="eyebrow">Pedido #{order.order_number}</p>
@@ -32,15 +40,13 @@ export default async function OrderDetailPage({ params }: Props) {
         <section className="panel">
           <h2>Itens</h2>
           <ul className="detail-items">
-            {items.map((item) => (
-              <li key={item.id}>
+            {items.map((item) => (<li key={item.id}>
                 <div>
                   <strong>{item.quantity} × {item.product_name}</strong>
                   <span>{item.variant_name}{item.total_units ? ` · ${item.total_units} unidades` : ""}</span>
                 </div>
                 <b>{formatCurrency(item.line_total_cents)}</b>
-              </li>
-            ))}
+              </li>))}
           </ul>
           {order.notes && <div className="order-note"><b>Observações</b><p>{order.notes}</p></div>}
           <div className="detail-totals">
@@ -59,14 +65,13 @@ export default async function OrderDetailPage({ params }: Props) {
                 {(Object.keys(orderStatus) as OrderStatus[]).map((status) => <option value={status} key={status}>{orderStatus[status]}</option>)}
               </select>
             </label>
-            <button className="button button-primary">Atualizar status</button>
+            <SubmitButton>Atualizar status</SubmitButton>
           </form>
-          <hr/>
+          <hr />
           <h3>Contato</h3>
           <p>{order.customers?.phone || "Telefone não informado"}</p>
           <p>{order.customers?.address || "Endereço não informado"}</p>
         </aside>
       </div>
-    </section>
-  );
+    </section>);
 }
