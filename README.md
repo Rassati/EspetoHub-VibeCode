@@ -127,6 +127,9 @@ sem compartilhar sessões ou dados entre visitantes.
 
 ## Atendimento mais rápido
 
+- **Cadastro em sequência:** em Produtos, preencha nome e preço. Marque “Este produto tem variações” quando houver tipos, sabores, tamanhos ou pacotes. Após salvar, escolha “Cadastrar outro produto” ou “Adicionar outra variação”, sem sair da tela. Erros mantêm os campos preenchidos.
+- **Grupos como Linguiças:** cadastre Linguiças uma vez e adicione Toscana, Apimentada, Com queijo etc. como variações. Na comanda e no resumo, produto e variação aparecem juntos em destaque, por exemplo **2 × Linguiças — Toscana**. Os cadastros existentes continuam funcionando; não é preciso recriá-los.
+- **Catálogo grande:** a lista de produtos tem busca sem distinção de acentos por produto/variação, filtro de ativos/inativos e páginas de 12 produtos. Ao buscar uma variação, ela aparece primeiro no cartão encontrado.
 - A tela **Novo pedido** tem busca por nome de produto ou variação, filtro “No pedido” e cartões compactos; ela continua prática mesmo com 40 ou mais produtos.
 - Cada produto pode ter uma **foto de capa** em JPG, PNG ou WebP de até 5 MB. A foto pode ser trocada ou removida pela empresa no Supabase Storage. O bucket é público: qualquer pessoa com a URL pode visualizar a imagem; não envie documentos ou fotos confidenciais.
 - Em **Clientes**, toque em um cartão para editar os dados. A exclusão pede confirmação e só é permitida quando o cliente ainda não tem pedidos, protegendo o histórico de vendas.
@@ -150,6 +153,14 @@ com dados fictícios, execute `node tests/preview-receipt.mjs` e abra
 `http://127.0.0.1:3002/?items=2` ou `http://127.0.0.1:3002/?items=200`.
 Essa prévia usa os estilos de impressão na tela; não substitui a prova na impressora.
 O ajuste combina o [CSS de impressão e o evento beforeprint](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Media_queries/Printing).
+
+### Prévia de usabilidade do cardápio
+
+Execute `node tests/preview-catalog.mjs` e abra `http://127.0.0.1:3003`.
+A prévia usa os componentes reais com 60 produtos fictícios e ações simuladas em
+memória: permite testar cadastro contínuo, variações, erros, busca, paginação e
+largura do layout. Não consulta nem grava no Supabase. `esbuild` é usado apenas
+nessa ferramenta de desenvolvimento; não é uma dependência da interface publicada.
 
 ## Estrutura de pastas
 

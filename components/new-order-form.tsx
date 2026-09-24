@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { createOrderAction } from "@/app/(app)/orders/actions";
 import { formatCurrency, moneyToCents } from "@/lib/formatters";
 import { productImageUrl } from "@/lib/product-images";
+import { orderItemLabel } from "@/lib/product-entry";
 import type { Customer, SaleVariant } from "@/types/app";
 import { MAX_ITEM_QUANTITY, MAX_ORDER_ITEMS, MAX_NOTES_LENGTH } from "@/lib/validation";
 type CartItem = {
@@ -177,7 +178,7 @@ export function NewOrderForm({ customers, catalog }: {
       </section>
       <aside className="order-summary panel">
         <div className="order-step"><span>3</span><div><h2>Resumo</h2><p>Confira e salve.</p></div></div>
-        {!cart.length ? <p className="empty">Os itens do pedido aparecerão aqui.</p> : <ul className="cart-list">{cart.map(({ variant, quantity }) => <li key={variant.id}><div><strong>{variant.productName}</strong><span>{variant.name}{variant.units_per_package ? ` · ${quantity * variant.units_per_package} unidades` : ""}</span></div><div className="quantity-control"><button type="button" onClick={() => changeQuantity(variant.id, -1)} aria-label={`Remover um ${variant.productName}`}>−</button><b>{quantity}</b><button type="button" onClick={() => changeQuantity(variant.id, 1)} aria-label={`Adicionar um ${variant.productName}`}>+</button></div><strong>{formatCurrency(quantity * variant.price_cents)}</strong></li>)}</ul>}
+        {!cart.length ? <p className="empty">Os itens do pedido aparecerão aqui.</p> : <ul className="cart-list">{cart.map(({ variant, quantity }) => <li key={variant.id}><div><strong>{orderItemLabel(variant.productName, variant.name)}</strong>{variant.units_per_package && <span>{quantity * variant.units_per_package} unidades</span>}</div><div className="quantity-control"><button type="button" disabled={isPending} onClick={() => changeQuantity(variant.id, -1)} aria-label={`Remover um ${orderItemLabel(variant.productName, variant.name)}`}>−</button><b>{quantity}</b><button type="button" disabled={isPending} onClick={() => changeQuantity(variant.id, 1)} aria-label={`Adicionar um ${orderItemLabel(variant.productName, variant.name)}`}>+</button></div><strong>{formatCurrency(quantity * variant.price_cents)}</strong></li>)}</ul>}
         <label className="discount-field">Desconto <small>opcional</small><input disabled={isPending} value={discount} onChange={(event) => setDiscount(event.target.value)} inputMode="decimal" placeholder="0,00"/></label>
         <label className="notes-field">Observações <small>opcional</small><textarea disabled={isPending} maxLength={MAX_NOTES_LENGTH} value={notes} onChange={(event) => setNotes(event.target.value)} rows={2} placeholder="Ex.: entregar amanhã"/></label>
         <div className="totals"><span>Subtotal <b>{formatCurrency(subtotal)}</b></span><span>Desconto <b>− {formatCurrency(safeDiscount)}</b></span><strong>Total <b>{formatCurrency(total)}</b></strong></div>

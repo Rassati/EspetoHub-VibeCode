@@ -5,6 +5,7 @@ import { getCompanyContext } from "@/lib/auth";
 import { moneyToCents } from "@/lib/formatters";
 import { createClient } from "@/lib/supabase/server";
 import { formText, isUuid } from "@/lib/validation";
+import type { ProductEntryResult } from "@/lib/product-entry";
 function text(formData: FormData, key: string) {
     return formText(formData, key);
 }
@@ -123,11 +124,15 @@ export async function removeProductImageAction(productId: string): Promise<Produ
     revalidatePath("/orders/new");
     return { warning };
 }
-export async function createProductAction(formData: FormData) {
+export async function createProductAction(formData: FormData): Promise<ProductEntryResult> {
     const name = text(formData, "name");
     if (!name || name.length > 140 || text(formData, "description").length > 2000)
-        redirect("/products?error=Revise+o+nome+e+a+descri%C3%A7%C3%A3o+do+produto.");
-    const { name: variantName, units: unitsPerPackage, cents: priceCents } = variantValues(formData, "/products");
+        return { error: "Informe o nome do produto (até 140 caracteres) e uma descrição de até 2.000 caracteres." };
+    const variantName = text(formData, "variant_name") || "Padrão";
+    const unitsPerPackage = optionalUnits(formData);
+    const priceCents = price(formData);
+    if (variantName.length > 100 || (unitsPerPackage !== null && !Number.isInteger(unitsPerPackage)) || !Number.isSafeInteger(priceCents) || priceCents < 0)
+        return { error: "Confira o preço, o nome da variação (até 100 caracteres) e as unidades (1 a 100.000). Seus dados foram mantidos." };
     const context = await getCompanyContext();
     const supabase = await createClient();
     const transaction = await supabase.rpc("create_product_with_variant", {
@@ -137,18 +142,18 @@ export async function createProductAction(formData: FormData) {
     if (!transaction.error && isUuid(transaction.data)) {
         revalidatePath("/products");
         revalidatePath("/orders/new");
-        redirect(`/products/${transaction.data}`);
+        return { productId: transaction.data, productName: name, variantName };
     }
     // Compatibility until migration 0005 is applied. Never retry an uncertain write.
     if (transaction.error?.code !== "PGRST202")
-        redirect(`/products?error=${encodeURIComponent("Não foi possível cadastrar. Confira os dados e se já existe um produto com esse nome.")}`);
+        return { error: "Não foi possível cadastrar. Confira os dados e se já existe um produto com esse nome." };
     const { data: product, error: productError } = await supabase
         .from("products")
         .insert({ company_id: context.company.id, name, description: text(formData, "description") || null })
         .select("id")
         .single();
-    if (productError)
-        redirect(`/products?error=${encodeURIComponent("Não foi possível cadastrar. Confira se já existe um produto com esse nome.")}`);
+    if (productError || !product || !isUuid(product.id))
+        return { error: "Não foi possível cadastrar. Confira se já existe um produto com esse nome." };
     const { error: variantError } = await supabase.from("product_variants").insert({
         company_id: context.company.id,
         product_id: product.id,
@@ -159,8 +164,28 @@ export async function createProductAction(formData: FormData) {
     revalidatePath("/products");
     revalidatePath("/orders/new");
     if (variantError)
-        redirect(`/products/${product.id}?error=${encodeURIComponent("O produto foi criado, mas a primeira forma de venda não foi salva. Adicione a variação abaixo.")}`);
-    redirect(`/products/${product.id}`);
+        return { productId: product.id, productName: name, warning: "O produto foi criado, mas a variação não foi salva. Use Adicionar variação para concluir; não cadastre o produto de novo." };
+    return { productId: product.id, productName: name, variantName };
+}
+
+/** Inline entry: no redirect, so validation errors never erase the current draft. */
+export async function quickAddVariantAction(formData: FormData): Promise<ProductEntryResult> {
+    const productId = text(formData, "product_id");
+    const name = text(formData, "variant_name");
+    const units = optionalUnits(formData);
+    const cents = price(formData);
+    if (!isUuid(productId) || !name || name.length > 100 || (units !== null && !Number.isInteger(units)) || !Number.isSafeInteger(cents) || cents < 0)
+        return { error: "Preencha o nome da variação, um preço válido e, se houver, a quantidade de unidades." };
+    const { company } = await getCompanyContext();
+    const supabase = await createClient();
+    const { data: product, error: productError } = await supabase.from("products").select("id, name").eq("id", productId).eq("company_id", company.id).maybeSingle();
+    if (productError || !product) return { error: "Produto não encontrado nesta empresa. Atualize a página." };
+    const { error } = await supabase.from("product_variants").insert({ company_id: company.id, product_id: productId, name, units_per_package: units, price_cents: cents });
+    if (error) return { error: "Não foi possível adicionar. Confira se já existe uma variação com esse nome." };
+    revalidatePath("/products");
+    revalidatePath(`/products/${productId}`);
+    revalidatePath("/orders/new");
+    return { productId, productName: product.name, variantName: name };
 }
 export async function updateProductAction(formData: FormData) {
     const productId = productIdFrom(formData);

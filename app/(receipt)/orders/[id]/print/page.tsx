@@ -3,6 +3,7 @@ import { getCompanyContext } from "@/lib/auth";
 import { orderStatus } from "@/lib/constants";
 import { getReceiptOrder } from "@/lib/data";
 import { formatCurrency, formatDate } from "@/lib/formatters";
+import { orderItemLabel } from "@/lib/product-entry";
 type Props = {
     params: Promise<{
         id: string;
@@ -47,11 +48,10 @@ export default async function PrintOrderPage({ params }: Props) {
           <ul className="receipt-items">
             {items.map((item) => (<li key={item.id}>
                 <div>
-                  <strong>{item.quantity} × {item.product_name}</strong>
+                  <strong>{item.quantity} × {orderItemLabel(item.product_name, item.variant_name)}</strong>
                   <span>
-                    {item.variant_name}
-                    {item.total_units ? ` · ${item.total_units} unidades` : ""}
-                    {` · ${formatCurrency(item.unit_price_cents)} cada`}
+                    {item.total_units ? `${item.total_units} unidades · ` : ""}
+                    {`${formatCurrency(item.unit_price_cents)} cada`}
                   </span>
                 </div>
                 <b>{formatCurrency(item.line_total_cents)}</b>

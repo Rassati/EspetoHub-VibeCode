@@ -6,6 +6,7 @@ import { orderStatus, type OrderStatus } from "@/lib/constants";
 import { getCompanyContext } from "@/lib/auth";
 import { getOrder } from "@/lib/data";
 import { formatCurrency, formatDate } from "@/lib/formatters";
+import { orderItemLabel } from "@/lib/product-entry";
 type Props = {
     params: Promise<{
         id: string;
@@ -42,8 +43,8 @@ export default async function OrderDetailPage({ params, searchParams }: Props) {
           <ul className="detail-items">
             {items.map((item) => (<li key={item.id}>
                 <div>
-                  <strong>{item.quantity} × {item.product_name}</strong>
-                  <span>{item.variant_name}{item.total_units ? ` · ${item.total_units} unidades` : ""}</span>
+                  <strong>{item.quantity} × {orderItemLabel(item.product_name, item.variant_name)}</strong>
+                  <span>{item.total_units ? `${item.total_units} unidades · ` : ""}{formatCurrency(item.unit_price_cents)} cada</span>
                 </div>
                 <b>{formatCurrency(item.line_total_cents)}</b>
               </li>))}

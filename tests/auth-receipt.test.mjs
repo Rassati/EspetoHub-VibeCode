@@ -52,4 +52,5 @@ test("printed receipt includes customer name/phone, items and total, never addre
   const html=renderToStaticMarkup(await Page({params:Promise.resolve({id:"test"})}));
   for(const value of ["Cliente Exemplo","11999990000","COMANDA #42","Espeto","120,00"]) assert.ok(html.includes(value),value);
   assert.ok(!html.includes("ENDERECO_CONFIDENCIAL")); assert.ok(!html.includes("Endereço"));
+  assert.ok(html.includes("<strong>2 × Espeto — Pacote</strong>"), "variation belongs in the bold item heading");
 });
