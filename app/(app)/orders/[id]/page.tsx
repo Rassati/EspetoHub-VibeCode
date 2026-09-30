@@ -32,9 +32,9 @@ export default async function OrderDetailPage({ params, searchParams }: Props) {
         </div>
         <div className="order-heading-actions">
           <StatusBadge status={order.status}/>
-          <Link className="button button-secondary" href={`/orders/${order.id}/print`}>
+          <a className="button button-secondary" href={`/orders/${order.id}/print`} target="_blank" rel="noopener noreferrer" title="Abrir PDF de uma página para imprimir">
             Imprimir comanda
-          </Link>
+          </a>
         </div>
       </div>
       <div className="content-grid order-detail-grid">

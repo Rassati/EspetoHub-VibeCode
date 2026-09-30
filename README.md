@@ -117,7 +117,7 @@ Use Node.js 22 ou superior e execute `npm run check` e `npm run build`.
 `npm test` usa um PostgreSQL em memória (PGlite, dependência de desenvolvimento)
 para validar as migrações, sem ler `.env.local` nem conectar ao banco real.
 Os testes também cobrem preços, datas inválidas, redirecionamentos, cookies,
-paginação e o HTML da comanda sem endereço. O antigo `next lint` foi removido
+paginação e PDFs reais da comanda sem endereço, com contagem de páginas e conferência do total. O antigo `next lint` foi removido
 porque não é um comando disponível no Next.js 16; `typecheck` verifica os tipos.
 
 O histórico agora possui páginas de 50 pedidos. Listas e totais consultam os
@@ -133,26 +133,33 @@ sem compartilhar sessões ou dados entre visitantes.
 - A tela **Novo pedido** tem busca por nome de produto ou variação, filtro “No pedido” e cartões compactos; ela continua prática mesmo com 40 ou mais produtos.
 - Cada produto pode ter uma **foto de capa** em JPG, PNG ou WebP de até 5 MB. A foto pode ser trocada ou removida pela empresa no Supabase Storage. O bucket é público: qualquer pessoa com a URL pode visualizar a imagem; não envie documentos ou fotos confidenciais.
 - Em **Clientes**, toque em um cartão para editar os dados. A exclusão pede confirmação e só é permitida quando o cliente ainda não tem pedidos, protegendo o histórico de vendas.
-- Em um pedido salvo, use **Imprimir comanda**. A aplicação abre uma página limpa, chama a impressão do navegador e inclui nome e telefone do cliente, itens, observações, total e status. O endereço cadastrado não é consultado nem exibido na comanda. Endereços digitados manualmente nas observações continuam sendo texto livre do pedido. Funciona também no celular, usando a opção de imprimir/compartilhar do aparelho.
+- Em um pedido salvo, use **Imprimir comanda**. A aplicação abre um PDF de uma página; use o botão de imprimir do leitor de PDF (ou imprimir/compartilhar no celular). Inclui nome e telefone do cliente, itens, observações, subtotal, desconto, total e status. O endereço cadastrado não é consultado nem exibido na comanda. Endereços digitados manualmente nas observações continuam sendo texto livre do pedido.
 - Todas as datas e horas são apresentadas no fuso de Brasília (`America/Sao_Paulo`).
 
 ### Comanda em uma folha
 
-A impressão usa A4 em retrato, margens de 10 mm e ajuste automático de escala
-para acomodar a comanda inteira em uma única folha, sem remover itens.
-O ajuste ocorre após carregar os estilos/fontes e novamente antes de imprimir
-(inclusive pelo Ctrl+P). Pedidos muito grandes ficam com letras menores.
-No diálogo da impressora, mantenha A4, escala 100% e cabeçalhos/rodapés do navegador
-desativados. Alterações manuais de papel, escala ou margens podem mudar o resultado;
-o site não controla essas opções do driver. Aguarde o botão “Imprimir comanda”
-ficar disponível. Se o JavaScript/estilo não carregar, o fallback preserva o
-conteúdo completo, mesmo que precise de mais páginas, em vez de cortar os itens.
+O servidor gera um PDF A4 em retrato com **exatamente uma página** em
+`lib/receipt-pdf.ts`. Não depende mais de CSS de impressão, carregamento de fontes
+no navegador ou eventos `beforeprint`; não existe fallback para várias páginas.
+O documento é privado, autenticado e não pode ser armazenado em cache compartilhado.
 
-Os testes de escala estão em `tests/receipt-print.test.mjs`. Para conferir o layout
-com dados fictícios, execute `node tests/preview-receipt.mjs` e abra
-`http://127.0.0.1:3002/?items=2` ou `http://127.0.0.1:3002/?items=200`.
-Essa prévia usa os estilos de impressão na tela; não substitui a prova na impressora.
-O ajuste combina o [CSS de impressão e o evento beforeprint](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Media_queries/Printing).
+A lista utiliza de uma a três colunas e ajusta a fonte conforme a quantidade e o
+comprimento dos itens, preservando os nomes, variações, preços e observações.
+Pedidos muito extensos inevitavelmente têm letras menores para caber numa folha.
+**Subtotal, desconto e TOTAL têm uma área exclusiva, fora da lista adaptável.**
+O TOTAL permanece em negrito e com fonte de 18 pontos, inclusive quando é zero.
+Valores monetários ausentes ou inválidos impedem a geração em vez de produzir uma
+comanda sem total. Na impressora, use A4, uma cópia e o modo normal/ajustar à página,
+não o modo pôster (mosaico).
+
+`tests/receipt-pdf.test.mjs` abre os PDFs gerados com um leitor independente e
+verifica uma única página, todos os produtos/variações, total e limites da folha,
+incluindo pedidos de 1, 4, 50, 60, 100 e 200 itens e textos longos.
+Para conferir com dados fictícios, execute `node tests/preview-receipt.mjs` e abra
+`http://127.0.0.1:3002/?items=60` ou `http://127.0.0.1:3002/?items=200&long=1`.
+`node tests/preview-receipt.mjs --write` também salva um exemplo em
+`output/pdf/comanda-60-itens.pdf` e casos extremos de conferência em `tmp/pdfs/`.
+Essa verificação cobre o arquivo PDF; o equipamento físico deve ser conferido localmente.
 
 ### Prévia de usabilidade do cardápio
 

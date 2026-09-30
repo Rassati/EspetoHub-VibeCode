@@ -1,7 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import { renderToStaticMarkup } from "react-dom/server";
 import { loadTs } from "./load-ts.mjs";
 
 const require = createRequire(import.meta.url);
@@ -42,15 +41,27 @@ test("callback: an expired code returns an actionable login error", async () => 
   assert.equal(url.pathname,"/login"); assert.ok(url.searchParams.get("error")); assert.equal(url.searchParams.has("code"),false);
 });
 
-test("printed receipt includes customer name/phone, items and total, never address", async () => {
+test("receipt route authenticates, scopes the order and returns a private PDF", async () => {
   const order={id:"test",order_number:42,status:"new",created_at:"2026-09-22T12:00:00Z",delivered_at:null,notes:null,subtotal_cents:12500,discount_cents:500,total_cents:12000,customers:{name:"Cliente Exemplo",phone:"11999990000",address:"ENDERECO_CONFIDENCIAL"}};
-  const {default:Page}=loadTs("app/(receipt)/orders/[id]/print/page.tsx", {
-    "@/components/receipt-print-controls":{ReceiptPrintControls:()=>null},
+  let submitted;
+  const {GET}=loadTs("app/(receipt)/orders/[id]/print/route.ts", {
     "@/lib/auth":{getCompanyContext:async()=>({company:{id:"test",name:"Empresa Exemplo"}})},
-    "@/lib/data":{getReceiptOrder:async()=>({order,items:[{id:"item",quantity:2,product_name:"Espeto",variant_name:"Pacote",total_units:20,unit_price_cents:6250,line_total_cents:12500}]})},
+    "@/lib/data":{getReceiptOrder:async(companyId,orderId)=>{assert.equal(companyId,"test");assert.equal(orderId,"test");return {order,items:[]};}},
+    "@/lib/receipt-pdf":{createReceiptPdf:async(data)=>{submitted=data;return new TextEncoder().encode("%PDF-test");}},
   });
-  const html=renderToStaticMarkup(await Page({params:Promise.resolve({id:"test"})}));
-  for(const value of ["Cliente Exemplo","11999990000","COMANDA #42","Espeto","120,00"]) assert.ok(html.includes(value),value);
-  assert.ok(!html.includes("ENDERECO_CONFIDENCIAL")); assert.ok(!html.includes("Endereço"));
-  assert.ok(html.includes("<strong>2 × Espeto — Pacote</strong>"), "variation belongs in the bold item heading");
+  const response=await GET(new Request("http://localhost/orders/test/print"),{params:Promise.resolve({id:"test"})});
+  assert.equal(response.headers.get("content-type"),"application/pdf");
+  assert.match(response.headers.get("cache-control"),/private, no-store/);
+  assert.match(response.headers.get("content-disposition"),/inline; filename="comanda-42.pdf"/);
+  assert.equal(submitted.order.total_cents,12000);
+  assert.equal(await response.text(),"%PDF-test");
+});
+
+test("receipt route never queries or renders when authentication fails", async () => {
+  const { GET } = loadTs("app/(receipt)/orders/[id]/print/route.ts", {
+    "@/lib/auth": { getCompanyContext: async () => redirect("/login") },
+    "@/lib/data": { getReceiptOrder: async () => assert.fail("Must not query without authentication") },
+    "@/lib/receipt-pdf": { createReceiptPdf: async () => assert.fail("Must not render without authentication") },
+  });
+  await assert.rejects(GET(new Request("http://localhost/orders/test/print"), { params: Promise.resolve({ id: "test" }) }), /redirect:\/login$/);
 });
