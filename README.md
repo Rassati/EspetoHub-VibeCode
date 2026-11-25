@@ -6,6 +6,8 @@ Um MVP mobile-first para pequenas empresas que vendem produtos em pacotes. Ele p
 
 **[Abrir a demonstração interativa](https://espeto-hub-vibe-code-git-main-rassati.vercel.app/#demonstracao)** para explorar o resumo de vendas, a lista de pedidos e os filtros de status com dados fictícios, sem cadastro.
 
+![Demonstração do painel do Espeto Hub mostrando o resumo de vendas e o filtro de pedidos prontos](docs/espeto-hub-demo.gif)
+
 Para executar a demonstração localmente, use Node.js 22, rode `npm ci` e `npm run dev` e acesse `http://localhost:3000`. A página de demonstração funciona sem configurar o Supabase. Para usar o painel autenticado, siga o [guia de instalação](#como-executar-localmente).
 
 - [Regras de cálculo e gravação de pedidos](supabase/migrations/0005_order_validation_and_storage.sql)
