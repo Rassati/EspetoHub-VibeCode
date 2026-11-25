@@ -2,6 +2,16 @@
 
 Um MVP mobile-first para pequenas empresas que vendem produtos em pacotes. Ele permite cadastrar produtos e suas formas de venda, clientes e pedidos, com totais calculados no banco e histórico de vendas.
 
+## Experimente o fluxo de pedidos
+
+A página inicial local tem uma [demonstração interativa](components/sales-demo.tsx) com dados fictícios. Para abrir essa página, use Node.js 22, rode `npm ci` e `npm run dev` e acesse `http://localhost:3000`. A demonstração da página inicial funciona sem configurar o Supabase. Para usar o painel autenticado, siga o [guia de instalação](#como-executar-localmente).
+
+- [Regras de cálculo e gravação de pedidos](supabase/migrations/0005_order_validation_and_storage.sql)
+- [Testes de geração da comanda em PDF](tests/receipt-pdf.test.mjs)
+- [Verificações no GitHub Actions](https://github.com/Rassati/EspetoHub-VibeCode/actions/workflows/ci.yml)
+
+O Espeto Hub foi desenvolvido com apoio de IA. A validação inclui testes das migrações em PostgreSQL em memória, leitura dos PDFs gerados com até 200 itens e verificação de tipos e build no CI.
+
 ## Visão do produto
 
 O Espeto Hub substitui o papel no atendimento diário: a pessoa escolhe um cliente, toca nas variações de produto, confere o total e salva. Cada pedido preserva o nome e o preço praticado no momento da venda, então uma alteração futura no catálogo não muda o histórico.
@@ -195,9 +205,7 @@ types/                # tipos usados pela aplicação
 
 ## Publicação e GitHub
 
-Para acessar de qualquer celular ou computador, publique o Next.js no **Vercel**. Ele entrega uma URL pública segura; depois é possível apontar um domínio próprio, como `espeto-hub.com.br`. O Supabase já é online e será acessado pela mesma aplicação publicada.
-
-O **GitHub não é obrigatório** para o sistema funcionar, mas é altamente recomendado: ele mantém uma cópia do código, histórico das alterações e permite ao Vercel publicar automaticamente cada atualização. O fluxo mais simples é criar um repositório privado no GitHub, enviar esta pasta e importá-lo no Vercel. No Vercel, configure as três variáveis de `.env.local` e adicione a URL pública em **Authentication → URL Configuration** no Supabase.
+O aplicativo Next.js pode ser implantado na Vercel a partir deste repositório. Para habilitar o painel autenticado, configure no projeto as variáveis descritas em [`.env.example`](.env.example), aplique as migrações em um ambiente do Supabase e adicione a URL pública de callback em **Authentication → URL Configuration** no Supabase.
 
 ## PWA
 
